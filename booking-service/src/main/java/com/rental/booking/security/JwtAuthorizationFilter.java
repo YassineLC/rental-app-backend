@@ -3,12 +3,17 @@ package com.rental.booking.security;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
 @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
@@ -32,7 +37,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 Long userId = jwtTokenProvider.extractUserId(token);
                 String role = jwtTokenProvider.extractRole(token);
 
-                // Add headers for downstream processing
                 HttpServletRequest wrappedRequest = new HeaderInjectionRequestWrapper(request, userId, role);
                 filterChain.doFilter(wrappedRequest, response);
                 return;
@@ -52,25 +56,52 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private static class HeaderInjectionRequestWrapper extends org.springframework.web.util.ContentCachingRequestWrapper {
+    private static class HeaderInjectionRequestWrapper extends HttpServletRequestWrapper {
         private final Long userId;
         private final String role;
+        private final Map<String, String> headerMap;
 
         public HeaderInjectionRequestWrapper(HttpServletRequest request, Long userId, String role) {
             super(request);
             this.userId = userId;
             this.role = role;
+            this.headerMap = new HashMap<>();
+            this.headerMap.put("X-User-Id", userId.toString());
+            this.headerMap.put("X-User-Role", role);
         }
 
         @Override
         public String getHeader(String name) {
-            if ("X-User-Id".equalsIgnoreCase(name)) {
-                return userId.toString();
-            }
-            if ("X-User-Role".equalsIgnoreCase(name)) {
-                return role;
+            String value = headerMap.get(name);
+            if (value != null) {
+                return value;
             }
             return super.getHeader(name);
         }
+
+        @Override
+        public Enumeration<String> getHeaders(String name) {
+            String value = headerMap.get(name);
+            if (value != null) {
+                Vector<String> vector = new Vector<>();
+                vector.add(value);
+                return vector.elements();
+            }
+            return super.getHeaders(name);
+        }
+
+        @Override
+        public Enumeration<String> getHeaderNames() {
+            Vector<String> vector = new Vector<>(headerMap.keySet());
+            Enumeration<String> parentHeaders = super.getHeaderNames();
+            while (parentHeaders.hasMoreElements()) {
+                String headerName = parentHeaders.nextElement();
+                if (!headerMap.containsKey(headerName)) {
+                    vector.add(headerName);
+                }
+            }
+            return vector.elements();
+        }
     }
 }
+
