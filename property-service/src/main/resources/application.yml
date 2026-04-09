@@ -31,6 +31,10 @@ eureka:
 upload:
   dir: ${user.home}/nidus-uploads
 
+jwt:
+  secret: cmVudGFsQXBwU2VjcmV0S2V5Rm9ySldUU2lnbmluZzIwMjVTZWN1cmVLZXk=
+  expiration: 86400000
+
 logging:
   level:
     com.rental.property: INFO
