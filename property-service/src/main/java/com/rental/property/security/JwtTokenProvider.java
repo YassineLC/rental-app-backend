@@ -1,4 +1,4 @@
-package com.rental.user.security;
+package com.rental.property.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -8,30 +8,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
-
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
-
-    public String generateToken(Long userId, String email, String role) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpiration);
-
-        return Jwts.builder()
-                .subject(email)
-                .claim("userId", userId)
-                .claim("role", role)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(getSigningKey())
-                .compact();
-    }
 
     public Claims extractClaims(String token) {
         return Jwts.parser()
@@ -41,16 +23,16 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    public String extractEmail(String token) {
-        return extractClaims(token).getSubject();
-    }
-
     public Long extractUserId(String token) {
         return extractClaims(token).get("userId", Long.class);
     }
 
     public String extractRole(String token) {
         return extractClaims(token).get("role", String.class);
+    }
+
+    public String extractEmail(String token) {
+        return extractClaims(token).getSubject();
     }
 
     public boolean validateToken(String token) {
@@ -67,4 +49,3 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-
