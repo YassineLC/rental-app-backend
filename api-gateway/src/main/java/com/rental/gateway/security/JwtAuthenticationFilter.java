@@ -25,7 +25,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     // Public paths that do not require authentication
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
-            "/api/auth/register"
+            "/api/auth/register",
+            "/api/properties",
+            "/api/images/"
     );
 
     @Value("${jwt.secret}")

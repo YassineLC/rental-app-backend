@@ -16,7 +16,6 @@ public class PropertyRequestDTO {
     @NotBlank(message = "City is required")
     private String city;
 
-    @NotBlank(message = "Address is required")
     private String address;
 
     @NotNull(message = "Price is required")

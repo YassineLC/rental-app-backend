@@ -5,7 +5,7 @@ spring:
   application:
     name: property-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/property_db
+    url: jdbc:postgresql://localhost:5433/property_db
     username: rental_user
     password: rental_pass
     driver-class-name: org.postgresql.Driver
@@ -16,6 +16,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 eureka:
   client:
@@ -23,6 +27,9 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+
+upload:
+  dir: ${user.home}/nidus-uploads
 
 logging:
   level:
