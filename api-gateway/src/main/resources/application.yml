@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # User Service routes
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+        - id: user-service-users
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+
+        # Property Service routes
+        - id: property-service
+          uri: lb://property-service
+          predicates:
+            - Path=/api/properties/**
+
+        # Booking Service routes
+        - id: booking-service
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/bookings/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# JWT secret must match user-service secret exactly
+jwt:
+  secret: cmVudGFsQXBwU2VjcmV0S2V5Rm9ySldUU2lnbmluZzIwMjVTZWN1cmVLZXk=
+
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN

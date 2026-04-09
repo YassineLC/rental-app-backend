@@ -1,0 +1,35 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/user_db
+    username: rental_user
+    password: rental_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Must match api-gateway JWT secret exactly
+jwt:
+  secret: cmVudGFsQXBwU2VjcmV0S2V5Rm9ySldUU2lnbmluZzIwMjVTZWN1cmVLZXk=
+  expiration: 86400000
+
+logging:
+  level:
+    com.rental.user: INFO
