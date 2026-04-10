@@ -101,5 +101,8 @@ public class PropertyService {
         property.setSurface(request.getSurface());
         property.setRooms(request.getRooms());
         property.setImageUrl(request.getImageUrl());
+        if (request.getAvailable() != null) {
+            property.setAvailable(request.getAvailable());
+        }
     }
 }

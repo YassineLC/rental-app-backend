@@ -30,6 +30,8 @@ public class PropertyRequestDTO {
 
     private String imageUrl;
 
+    private Boolean available;
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
@@ -56,4 +58,7 @@ public class PropertyRequestDTO {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public Boolean getAvailable() { return available; }
+    public void setAvailable(Boolean available) { this.available = available; }
 }
