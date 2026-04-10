@@ -27,7 +27,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/auth/login",
             "/api/auth/register",
             "/api/properties",
-            "/api/images/"
+            "/api/images/",
+            "/api/bookings/property/"
     );
 
     @Value("${jwt.secret}")
