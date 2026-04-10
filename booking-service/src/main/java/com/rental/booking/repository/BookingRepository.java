@@ -2,9 +2,7 @@ package com.rental.booking.repository;
 
 import com.rental.booking.model.Booking;
 import com.rental.booking.model.BookingStatus;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,9 +21,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);
 
-    // Pessimistic write lock prevents two concurrent requests from both passing
-    // the overlap check before either has committed — eliminates the race condition.
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT COUNT(b) > 0 FROM Booking b
             WHERE b.propertyId = :propertyId
@@ -38,4 +33,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query(value = "SELECT pg_advisory_xact_lock(:propertyId)", nativeQuery = true)
+    void lockPropertyBookings(@Param("propertyId") Long propertyId);
 }

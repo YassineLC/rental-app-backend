@@ -42,6 +42,9 @@ public class BookingService {
             throw new IllegalStateException("Ce logement n'est pas disponible à la réservation.");
         }
 
+        // Serialize booking creation for the same property inside the transaction.
+        bookingRepository.lockPropertyBookings(request.getPropertyId());
+
         boolean overlapping = bookingRepository.existsOverlappingBooking(
                 request.getPropertyId(), request.getStartDate(), request.getEndDate());
         if (overlapping) {
