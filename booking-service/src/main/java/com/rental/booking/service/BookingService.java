@@ -10,6 +10,7 @@ import com.rental.booking.model.BookingStatus;
 import com.rental.booking.repository.BookingRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ public class BookingService {
         this.propertyClient = propertyClient;
     }
 
+    @Transactional
     public BookingDTO create(BookingRequestDTO request, Long tenantId) {
         if (!request.getEndDate().isAfter(request.getStartDate())) {
             throw new IllegalArgumentException("La date de fin doit être après la date de début.");
@@ -84,6 +86,7 @@ public class BookingService {
                 .stream().map(BookingDTO::from).collect(Collectors.toList());
     }
 
+    @Transactional
     public BookingDTO confirm(Long id, Long ownerId) {
         Booking booking = findById(id);
         if (!booking.getOwnerId().equals(ownerId)) {
@@ -100,6 +103,7 @@ public class BookingService {
         return BookingDTO.from(bookingRepository.save(booking));
     }
 
+    @Transactional
     public BookingDTO cancel(Long id, Long userId) {
         Booking booking = findById(id);
         if (!booking.getTenantId().equals(userId) && !booking.getOwnerId().equals(userId)) {

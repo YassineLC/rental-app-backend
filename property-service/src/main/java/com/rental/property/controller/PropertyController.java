@@ -2,7 +2,6 @@ package com.rental.property.controller;
 
 import com.rental.property.dto.PropertyDTO;
 import com.rental.property.dto.PropertyRequestDTO;
-import com.rental.property.security.JwtTokenProvider;
 import com.rental.property.service.PropertyService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,35 +17,9 @@ import java.util.Map;
 public class PropertyController {
 
     private final PropertyService propertyService;
-    private final JwtTokenProvider jwtTokenProvider;
 
-    public PropertyController(PropertyService propertyService, JwtTokenProvider jwtTokenProvider) {
+    public PropertyController(PropertyService propertyService) {
         this.propertyService = propertyService;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
-
-    private Long extractUserIdFromAuth(String authorization) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            try {
-                return jwtTokenProvider.extractUserId(token);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private String extractRoleFromAuth(String authorization) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            try {
-                return jwtTokenProvider.extractRole(token);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
     }
 
     @GetMapping
@@ -74,10 +47,8 @@ public class PropertyController {
 
     @GetMapping("/owner/me")
     public ResponseEntity<List<PropertyDTO>> getMyProperties(
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
-
-        Long ownerId = extractUserIdFromAuth(authorization);
-        String role = extractRoleFromAuth(authorization);
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
 
         if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -87,11 +58,9 @@ public class PropertyController {
 
     @PostMapping
     public ResponseEntity<PropertyDTO> createProperty(
-            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody PropertyRequestDTO request) {
-
-        Long ownerId = extractUserIdFromAuth(authorization);
-        String role = extractRoleFromAuth(authorization);
 
         if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -103,11 +72,11 @@ public class PropertyController {
     @PutMapping("/{id}")
     public ResponseEntity<PropertyDTO> updateProperty(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader("X-User-Role") String role,
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody PropertyRequestDTO request) {
 
-        if (!"OWNER".equals(role) && !"ADMIN".equals(role)) {
+        if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(propertyService.update(id, request, ownerId));
@@ -116,10 +85,10 @@ public class PropertyController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProperty(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long ownerId,
-            @RequestHeader("X-User-Role") String role) {
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
 
-        if (!"OWNER".equals(role) && !"ADMIN".equals(role)) {
+        if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         propertyService.delete(id, ownerId);

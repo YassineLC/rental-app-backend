@@ -3,7 +3,6 @@ package com.rental.booking.controller;
 import com.rental.booking.dto.BookingDTO;
 import com.rental.booking.dto.BookingRequestDTO;
 import com.rental.booking.dto.UnavailablePeriod;
-import com.rental.booking.security.JwtTokenProvider;
 import com.rental.booking.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,81 +17,44 @@ import java.util.Map;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final JwtTokenProvider jwtTokenProvider;
 
-    public BookingController(BookingService bookingService, JwtTokenProvider jwtTokenProvider) {
+    public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
-
-    private Long extractUserIdFromAuth(String authorization) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            try {
-                return jwtTokenProvider.extractUserId(token);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private String extractRoleFromAuth(String authorization) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            try {
-                return jwtTokenProvider.extractRole(token);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
     }
 
     @PostMapping
     public ResponseEntity<BookingDTO> createBooking(
-            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestHeader(value = "X-User-Id", required = false) Long tenantId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
             @Valid @RequestBody BookingRequestDTO request) {
-
-        Long tenantId = extractUserIdFromAuth(authorization);
-        String role = extractRoleFromAuth(authorization);
 
         if (tenantId == null || !"TENANT".equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        BookingDTO booking = bookingService.create(request, tenantId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(booking);
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.create(request, tenantId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingDTO> getBooking(
             @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
 
-        Long userId = extractUserIdFromAuth(authorization);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        if (userId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return ResponseEntity.ok(bookingService.getById(id, userId));
     }
 
     @GetMapping("/my-bookings")
     public ResponseEntity<List<BookingDTO>> getMyBookings(
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
+            @RequestHeader(value = "X-User-Id", required = false) Long tenantId) {
 
-        Long tenantId = extractUserIdFromAuth(authorization);
-        if (tenantId == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        if (tenantId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return ResponseEntity.ok(bookingService.getByTenant(tenantId));
     }
 
     @GetMapping("/owner/requests")
     public ResponseEntity<List<BookingDTO>> getOwnerBookings(
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
-
-        Long ownerId = extractUserIdFromAuth(authorization);
-        String role = extractRoleFromAuth(authorization);
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
 
         if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -103,10 +65,8 @@ public class BookingController {
     @PutMapping("/{id}/confirm")
     public ResponseEntity<BookingDTO> confirmBooking(
             @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
-
-        Long ownerId = extractUserIdFromAuth(authorization);
-        String role = extractRoleFromAuth(authorization);
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
 
         if (ownerId == null || (!"OWNER".equals(role) && !"ADMIN".equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -117,12 +77,9 @@ public class BookingController {
     @PutMapping("/{id}/cancel")
     public ResponseEntity<BookingDTO> cancelBooking(
             @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
 
-        Long userId = extractUserIdFromAuth(authorization);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        if (userId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return ResponseEntity.ok(bookingService.cancel(id, userId));
     }
 
