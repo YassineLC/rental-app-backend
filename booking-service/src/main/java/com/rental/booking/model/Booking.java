@@ -42,6 +42,12 @@ public class Booking {
     private String propertyTitle;
     private String propertyCity;
 
+    // Status transition timestamps
+    private LocalDateTime confirmedAt;
+    private LocalDateTime activatedAt;
+    private LocalDateTime completedAt;
+    private LocalDateTime cancelledAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -84,6 +90,18 @@ public class Booking {
 
     public String getPropertyCity() { return propertyCity; }
     public void setPropertyCity(String propertyCity) { this.propertyCity = propertyCity; }
+
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+
+    public LocalDateTime getActivatedAt() { return activatedAt; }
+    public void setActivatedAt(LocalDateTime activatedAt) { this.activatedAt = activatedAt; }
+
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

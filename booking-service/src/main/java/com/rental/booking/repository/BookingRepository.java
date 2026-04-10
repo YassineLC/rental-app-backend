@@ -19,6 +19,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByPropertyIdOrderByCreatedAtDesc(Long propertyId);
 
+    List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);
+
     @Query("""
             SELECT COUNT(b) > 0 FROM Booking b
             WHERE b.propertyId = :propertyId

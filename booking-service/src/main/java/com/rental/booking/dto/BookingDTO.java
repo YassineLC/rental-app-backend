@@ -19,6 +19,10 @@ public class BookingDTO {
     private BigDecimal totalPrice;
     private String message;
     private LocalDateTime createdAt;
+    private LocalDateTime confirmedAt;
+    private LocalDateTime activatedAt;
+    private LocalDateTime completedAt;
+    private LocalDateTime cancelledAt;
 
     public static BookingDTO from(Booking b) {
         BookingDTO dto = new BookingDTO();
@@ -34,6 +38,10 @@ public class BookingDTO {
         dto.totalPrice = b.getTotalPrice();
         dto.message = b.getMessage();
         dto.createdAt = b.getCreatedAt();
+        dto.confirmedAt = b.getConfirmedAt();
+        dto.activatedAt = b.getActivatedAt();
+        dto.completedAt = b.getCompletedAt();
+        dto.cancelledAt = b.getCancelledAt();
         return dto;
     }
 
@@ -49,4 +57,8 @@ public class BookingDTO {
     public BigDecimal getTotalPrice() { return totalPrice; }
     public String getMessage() { return message; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public LocalDateTime getActivatedAt() { return activatedAt; }
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
 }
