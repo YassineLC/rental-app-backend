@@ -6,10 +6,12 @@ import com.rental.property.service.PropertyService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,19 +25,23 @@ public class PropertyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PropertyDTO>> searchProperties(
+        public ResponseEntity<Page<PropertyDTO>> searchProperties(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(required = false) Integer rooms) {
+            @RequestParam(required = false) Integer rooms,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "12") Integer size) {
+
+        Pageable pageable = PageRequest.of(page, size);
 
         boolean hasFilters = city != null || type != null
                 || minPrice != null || maxPrice != null || rooms != null;
 
-        List<PropertyDTO> result = hasFilters
-                ? propertyService.search(city, type, minPrice, maxPrice, rooms)
-                : propertyService.getAll();
+        Page<PropertyDTO> result = hasFilters
+            ? propertyService.search(city, type, minPrice, maxPrice, rooms, pageable)
+            : propertyService.getAll(pageable);
 
         return ResponseEntity.ok(result);
     }
@@ -46,7 +52,7 @@ public class PropertyController {
     }
 
     @GetMapping("/owner/me")
-    public ResponseEntity<List<PropertyDTO>> getMyProperties(
+    public ResponseEntity<java.util.List<PropertyDTO>> getMyProperties(
             @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
             @RequestHeader(value = "X-User-Role", required = false) String role) {
 

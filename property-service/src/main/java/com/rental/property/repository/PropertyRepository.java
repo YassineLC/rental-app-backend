@@ -4,6 +4,8 @@ import com.rental.property.model.Property;
 import com.rental.property.model.PropertyType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +19,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     List<Property> findByAvailableTrue();
 
+        Page<Property> findByAvailableTrue(Pageable pageable);
+
     @Query("""
             SELECT p FROM Property p
             WHERE p.available = true
@@ -27,11 +31,12 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
               AND (:rooms IS NULL OR p.rooms >= :rooms)
             ORDER BY p.createdAt DESC
             """)
-    List<Property> search(
+    Page<Property> search(
             @Param("city") String city,
             @Param("type") PropertyType type,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
-            @Param("rooms") Integer rooms
+            @Param("rooms") Integer rooms,
+            Pageable pageable
     );
 }

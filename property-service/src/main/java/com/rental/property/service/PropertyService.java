@@ -5,6 +5,8 @@ import com.rental.property.dto.PropertyRequestDTO;
 import com.rental.property.model.Property;
 import com.rental.property.model.PropertyType;
 import com.rental.property.repository.PropertyRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,25 +22,21 @@ public class PropertyService {
         this.propertyRepository = propertyRepository;
     }
 
-    public List<PropertyDTO> search(String city, String type,
-                                    BigDecimal minPrice, BigDecimal maxPrice,
-                                    Integer rooms) {
+        public Page<PropertyDTO> search(String city, String type,
+                        BigDecimal minPrice, BigDecimal maxPrice,
+                        Integer rooms, Pageable pageable) {
         PropertyType propertyType = (type != null && !type.isBlank())
                 ? PropertyType.valueOf(type.toUpperCase())
                 : null;
 
         return propertyRepository
-                .search(city, propertyType, minPrice, maxPrice, rooms)
-                .stream()
-                .map(PropertyDTO::from)
-                .collect(Collectors.toList());
+            .search(city, propertyType, minPrice, maxPrice, rooms, pageable)
+            .map(PropertyDTO::from);
     }
 
-    public List<PropertyDTO> getAll() {
-        return propertyRepository.findByAvailableTrue()
-                .stream()
-                .map(PropertyDTO::from)
-                .collect(Collectors.toList());
+        public Page<PropertyDTO> getAll(Pageable pageable) {
+        return propertyRepository.findByAvailableTrue(pageable)
+            .map(PropertyDTO::from);
     }
 
     public PropertyDTO getById(Long id) {
