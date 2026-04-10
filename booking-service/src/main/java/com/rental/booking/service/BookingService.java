@@ -31,19 +31,19 @@ public class BookingService {
 
     public BookingDTO create(BookingRequestDTO request, Long tenantId) {
         if (!request.getEndDate().isAfter(request.getStartDate())) {
-            throw new IllegalArgumentException("End date must be after start date");
+            throw new IllegalArgumentException("La date de fin doit être après la date de début.");
         }
 
         PropertyResponse property = propertyClient.getPropertyById(request.getPropertyId());
 
         if (!property.getAvailable()) {
-            throw new IllegalStateException("Property is not available");
+            throw new IllegalStateException("Ce logement n'est pas disponible à la réservation.");
         }
 
         boolean overlapping = bookingRepository.existsOverlappingBooking(
                 request.getPropertyId(), request.getStartDate(), request.getEndDate());
         if (overlapping) {
-            throw new IllegalStateException("Property is already booked for these dates");
+            throw new IllegalStateException("Ce logement est déjà réservé pour ces dates.");
         }
 
         long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
@@ -69,7 +69,7 @@ public class BookingService {
     public BookingDTO getById(Long id, Long userId) {
         Booking booking = findById(id);
         if (!booking.getTenantId().equals(userId) && !booking.getOwnerId().equals(userId)) {
-            throw new IllegalStateException("Access denied");
+            throw new IllegalStateException("Accès refusé.");
         }
         return BookingDTO.from(booking);
     }
@@ -87,28 +87,37 @@ public class BookingService {
     public BookingDTO confirm(Long id, Long ownerId) {
         Booking booking = findById(id);
         if (!booking.getOwnerId().equals(ownerId)) {
-            throw new IllegalStateException("Only the owner can confirm this booking");
+            throw new IllegalStateException("Seul le propriétaire peut confirmer cette réservation.");
         }
         if (booking.getStatus() != BookingStatus.PENDING) {
-            throw new IllegalStateException("Only pending bookings can be confirmed");
+            throw new IllegalStateException("Seules les réservations en attente peuvent être confirmées.");
         }
         booking.setStatus(BookingStatus.CONFIRMED);
         booking.setConfirmedAt(LocalDateTime.now());
+        try {
+            propertyClient.updateAvailability(booking.getPropertyId(), false);
+        } catch (Exception ignored) {}
         return BookingDTO.from(bookingRepository.save(booking));
     }
 
     public BookingDTO cancel(Long id, Long userId) {
         Booking booking = findById(id);
         if (!booking.getTenantId().equals(userId) && !booking.getOwnerId().equals(userId)) {
-            throw new IllegalStateException("Access denied");
+            throw new IllegalStateException("Accès refusé.");
         }
         if (booking.getStatus() == BookingStatus.COMPLETED
                 || booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new IllegalStateException("Booking cannot be cancelled");
+            throw new IllegalStateException("Cette réservation ne peut plus être annulée.");
         }
+        BookingStatus previousStatus = booking.getStatus();
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
-        propertyClient.updateAvailability(booking.getPropertyId(), true);
+        // Only restore availability if the booking was confirmed/active (property was marked unavailable)
+        if (previousStatus == BookingStatus.CONFIRMED || previousStatus == BookingStatus.ACTIVE) {
+            try {
+                propertyClient.updateAvailability(booking.getPropertyId(), true);
+            } catch (Exception ignored) {}
+        }
         return BookingDTO.from(bookingRepository.save(booking));
     }
 

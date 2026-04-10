@@ -43,7 +43,7 @@ public class PropertyService {
 
     public PropertyDTO getById(Long id) {
         Property property = propertyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Logement introuvable."));
         return PropertyDTO.from(property);
     }
 
@@ -63,10 +63,10 @@ public class PropertyService {
 
     public PropertyDTO update(Long id, PropertyRequestDTO request, Long ownerId) {
         Property property = propertyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Logement introuvable."));
 
         if (!property.getOwnerId().equals(ownerId)) {
-            throw new IllegalStateException("You are not the owner of this property");
+            throw new IllegalStateException("Vous n'êtes pas le propriétaire de ce logement.");
         }
 
         mapRequestToProperty(request, property);
@@ -75,10 +75,10 @@ public class PropertyService {
 
     public void delete(Long id, Long ownerId) {
         Property property = propertyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Logement introuvable."));
 
         if (!property.getOwnerId().equals(ownerId)) {
-            throw new IllegalStateException("You are not the owner of this property");
+            throw new IllegalStateException("Vous n'êtes pas le propriétaire de ce logement.");
         }
 
         propertyRepository.delete(property);
@@ -86,7 +86,7 @@ public class PropertyService {
 
     public void updateAvailability(Long id, Boolean available) {
         Property property = propertyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Logement introuvable."));
         property.setAvailable(available);
         propertyRepository.save(property);
     }
