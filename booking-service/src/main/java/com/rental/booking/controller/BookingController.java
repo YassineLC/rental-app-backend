@@ -89,6 +89,16 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getUnavailablePeriods(propertyId));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBooking(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+
+        if (userId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        bookingService.delete(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));

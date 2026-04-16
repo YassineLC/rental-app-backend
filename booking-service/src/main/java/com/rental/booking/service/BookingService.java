@@ -167,6 +167,18 @@ public class BookingService {
                 });
     }
 
+    @Transactional
+    public void delete(Long id, Long userId) {
+        Booking booking = findById(id);
+        if (!booking.getTenantId().equals(userId) && !booking.getOwnerId().equals(userId)) {
+            throw new IllegalStateException("Accès refusé.");
+        }
+        if (booking.getStatus() != BookingStatus.CANCELLED) {
+            throw new IllegalStateException("Seules les réservations annulées peuvent être supprimées.");
+        }
+        bookingRepository.delete(booking);
+    }
+
     private Booking findById(Long id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));

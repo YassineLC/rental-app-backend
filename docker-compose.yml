@@ -1,4 +1,6 @@
 services:
+
+  # ── Base de données ─────────────────────────────────────────
   postgres:
     image: postgres:16
     container_name: rental-postgres
@@ -17,5 +19,112 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Discovery ───────────────────────────────────────────────
+  eureka-server:
+    build:
+      context: .
+      dockerfile: ./eureka-server/Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_HOSTNAME=eureka-server
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health 2>/dev/null || wget -qO- http://localhost:8761/ 2>/dev/null | grep -q eureka || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+
+  # ── Gateway ─────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── User Service ─────────────────────────────────────────────
+  user-service:
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/user_db
+      - DB_USER=rental_user
+      - DB_PASS=rental_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── Property Service ─────────────────────────────────────────
+  property-service:
+    build:
+      context: .
+      dockerfile: ./property-service/Dockerfile
+    container_name: property-service
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/property_db
+      - DB_USER=rental_user
+      - DB_PASS=rental_pass
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - property_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── Booking Service ──────────────────────────────────────────
+  booking-service:
+    build:
+      context: .
+      dockerfile: ./booking-service/Dockerfile
+    container_name: booking-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/booking_db
+      - DB_USER=rental_user
+      - DB_PASS=rental_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── Frontend ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: rental-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+
 volumes:
   postgres_data:
+  property_uploads:
