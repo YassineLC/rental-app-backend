@@ -86,7 +86,7 @@ services:
       - DB_PASS=rental_pass
       - UPLOAD_DIR=/app/uploads
     volumes:
-      - property_uploads:/app/uploads
+      - ${USERPROFILE}/nidus-uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -127,4 +127,3 @@ services:
 
 volumes:
   postgres_data:
-  property_uploads:
